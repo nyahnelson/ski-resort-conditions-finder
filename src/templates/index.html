@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idaho Ski Conditions Finder</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main>
+        <h1>Idaho Ski Conditions Finder</h1>
+
+        <p>Compare ski resort conditions throughout Idaho.</p>
+
+        <form action="/conditions" method="GET">
+            <label for="resort_id">Select a resort:</label>
+
+            <select name="resort_id" id="resort_id">
+                {% for resort in resorts %}
+                <option value="{{ resort.id }}">
+                    {{ resort.name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">View Conditions</button>
+        </form>
+    </main>
+</body>
+</html>

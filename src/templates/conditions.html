@@ -1,0 +1,22 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resort Conditions</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main>
+        <h1>{{ resort.name }}</h1>
+
+        <p>Location: {{ resort.location }}</p>
+
+        <p>Weather conditions will be displayed here soon.</p>
+
+        <a href="/">Back to resorts</a>
+    </main>
+</body>
+</html>
