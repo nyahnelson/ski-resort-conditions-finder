@@ -1,22 +1,24 @@
+<h2>Weather Forecast</h2>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resort Conditions</title>
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <main>
-        <h1>{{ resort.name }}</h1>
-
-        <p>Location: {{ resort.location }}</p>
-
-        <p>Weather conditions will be displayed here soon.</p>
-
-        <a href="/">Back to resorts</a>
-    </main>
-</body>
-</html>
+{% if forecasts %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Temperature</th>
+                <th>Conditions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for forecast in forecasts %}
+            <tr>
+                <td>{{ forecast.forecast_date }}</td>
+                <td>{{ forecast.temperature }}°F</td>
+                <td>{{ forecast.description }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No forecasts available. Run the weather collector first.</p>
+{% endif %}

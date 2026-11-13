@@ -1,6 +1,6 @@
 
-from flask import Blueprint, jsonify, render_template, request
-from src.api.controller import get_all_resorts, get_resort_by_id
+from flask import abort, Blueprint, jsonify, render_template, request
+from src.api.controller import get_all_resorts, get_resort_by_id, get_forecasts_by_resort
 
 api_bp = Blueprint("api", __name__)
 
@@ -10,19 +10,22 @@ def home():
     return render_template("index.html", resorts=resorts)
 
 
-@api_bp.route("/conditions", methods=["GET"])
+@api_bp.route("/conditions")
 def conditions():
     resort_id = request.args.get("resort_id", type=int)
-
-    if resort_id is None:
-        return "Please select a resort", 400
 
     resort = get_resort_by_id(resort_id)
 
     if resort is None:
-        return "Resort not found", 404
+        abort(404)
 
-    return render_template("conditions.html", resort=resort)
+    forecasts = get_forecasts_by_resort(resort_id)
+
+    return render_template(
+        "conditions.html",
+        resort=resort,
+        forecasts=forecasts
+    )
 
 
 @api_bp.route("/api/resorts", methods=["GET"])
