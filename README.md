@@ -1,60 +1,70 @@
 
 # Ski Resort Conditions Finder
 
-A Python-based web application designed to help skiers and snowboarders compare weather and snow conditions at ski resorts throughout Idaho.
+A Python Flask web application that helps skiers and snowboarders compare weather conditions at ski resorts throughout Idaho.
 
 ## Project Overview
 
-Skiers and snowboarders often have to visit multiple resort websites to compare snowfall, temperatures, and weather forecasts before deciding where to ski. The Ski Resort Conditions Finder aims to simplify this process by automatically collecting weather data from external sources and displaying it in one location.
+Skiers often need to visit multiple websites to compare resort conditions. This application simplifies the process by collecting weather forecasts from the National Weather Service (NWS) API and storing them in a SQLite database.
 
-The application will allow users to compare Idaho ski resorts, view weather forecasts, and identify which mountains may have the best conditions for their next trip.
+Currently supported resorts:
+- Bogus Basin
+- Brundage Mountain
+- Tamarack Resort
+- Sun Valley Resort
 
-## Planned Features
+## Features
 
-- **Resort Selection:** View and select ski resorts throughout Idaho.
-- **Weather Data Collection:** Automatically retrieve weather forecasts from an external API.
-- **Resort Comparison:** Compare predicted snowfall and temperatures across multiple resorts.
-- **Resort Rankings:** Rank resorts based on selected weather conditions.
-- **Historical Data:** Store previously collected weather information to track changes over time.
-- **Web Dashboard:** Display resort conditions and comparisons through a simple interface.
+**Implemented:**
+- Flask web application with resort selection
+- REST API endpoints for resort information
+- Weather data collection from the NWS API
+- SQLite database for storing resorts and weather forecasts
+- Database schema migrations using Flask-Migrate
+
+**Planned:**
+- Resort comparisons and rankings
+- Snowfall analysis
+- Historical weather visualization
+- Automated data collection
+- CI/CD and cloud deployment
 
 ## Technology Stack
 
 | Component | Technology |
 |---|---|
-| Programming Language | Python |
-| Web Framework | Flask |
+| Language | Python |
+| Backend | Flask |
 | Frontend | HTML, CSS |
-| REST API | Flask routes |
-| Weather Data | Open-Meteo API (planned) |
-| Database | SQLite (planned) |
+| Weather API | National Weather Service |
+| Database | SQLite, Flask-SQLAlchemy |
+| Migrations | Flask-Migrate, Alembic |
 | Testing | pytest (planned) |
-| Message Queue | RabbitMQ (planned) |
-| CI/CD | GitHub Actions (planned) |
-| Deployment | To be determined |
+| Deployment | Render (planned) |
 
 ## Project Structure
-
-The initial project structure is:
 
 ```text
 ski-resort-conditions-finder/
 ├── src/
-│   └── app.py
-├── .gitignore
+│   ├── app.py
+│   ├── api/
+│   │   ├── router.py
+│   │   ├── controller.py
+│   │   └── model.py
+│   ├── services/
+│   │   ├── collector.py
+│   │   ├── analyzer.py
+│   │   └── database.py
+│   ├── templates/
+│   └── static/
+├── migrations/
+├── run_collector.py
 ├── requirements.txt
 └── README.md
 ```
 
-Additional modules for data collection, analysis, database models, and testing will be added as development progresses.
-
 ## Getting Started
-
-### Prerequisites
-
-- Python 3
-- pip
-- Git
 
 ### Installation
 
@@ -65,56 +75,89 @@ git clone https://github.com/nyahnelson/ski-resort-conditions-finder.git
 cd ski-resort-conditions-finder
 ```
 
-Create and activate a Python virtual environment:
+Create a virtual environment and install dependencies:
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
 pip install -r requirements.txt
 ```
 
-### Running the Application
+### Database Setup
 
-Start the Flask development server:
+Apply database migrations to create the SQLite tables:
 
 ```bash
-flask --app src/app run
+flask --app src.app db upgrade
 ```
 
-Open the application in your browser:
+The database is stored at `instance/ski_conditions.db`.
 
-http://127.0.0.1:5000/
+### Collect Weather Data
+
+Run the data collector:
+
+```bash
+python run_collector.py
+```
+
+The collector retrieves approximately seven days of daytime and nighttime forecasts for each resort, typically saving 56 records per run.
+
+Each record contains a forecast date, temperature, weather description, and collection timestamp. Snowfall amounts are currently unavailable from the selected NWS forecast endpoint.
+
+### View Saved Data
+
+Open the SQLite database:
+
+```bash
+sqlite3 instance/ski_conditions.db
+```
+
+Run:
+
+```sql
+SELECT * FROM weather_forecasts LIMIT 10;
+```
+
+Exit using `.quit`.
+
+### Run the Web Application
+
+```bash
+flask --app src.app run --debug
+```
+
+Open http://127.0.0.1:5000/ in your browser.
+
+## Database and Persistence
+
+The application uses two tables:
+
+- `resorts`: Stores resort names and locations.
+- `weather_forecasts`: Stores weather forecasts linked to resorts by `resort_id`.
+
+Flask-SQLAlchemy manages database operations, while Flask-Migrate and Alembic track schema changes in the `migrations/` directory.
+
+To generate and apply a new schema migration:
+
+```bash
+flask --app src.app db migrate -m "Describe change"
+flask --app src.app db upgrade
+```
 
 ## Development Roadmap
 
-### Phase 1: Web Application and Repository Setup
-- Create the Flask application.
-- Implement a basic HTML form for selecting ski resorts.
-- Set up the GitHub repository.
-- Deploy a publicly accessible website.
-
-### Phase 2: Data Collection and Persistence
-- Integrate an external weather API.
-- Collect weather forecasts for supported Idaho ski resorts.
-- Store collected information in a database.
-
-### Phase 3: Data Analysis and Testing
-- Implement snowfall and temperature comparisons.
-- Rank resorts based on weather conditions.
-- Add unit and integration tests.
-
-### Phase 4: Advanced Features
-- Implement event-based messaging with RabbitMQ.
-- Configure continuous integration and delivery.
-- Add application monitoring.
+- [x] Set up Flask application and GitHub repository
+- [x] Implement resort selection and API endpoints
+- [x] Integrate external weather API
+- [x] Store weather forecasts in SQLite
+- [x] Implement database migrations
+- [ ] Implement resort comparisons and rankings
+- [ ] Add automated testing and CI/CD
+- [ ] Deploy the application
 
 ## Project Status
 
-**In Development**
+**In Development — Data Collection and Persistence Implemented**
 
-The project is currently in its initial setup phase. The first milestone is establishing a working Flask web application and hosting the source code on GitHub.
+The application successfully retrieves weather forecasts from the National Weather Service API and saves them to SQLite. Future development will focus on analyzing conditions and comparing resorts.
