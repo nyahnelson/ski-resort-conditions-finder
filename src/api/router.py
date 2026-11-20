@@ -1,6 +1,12 @@
 
 from flask import abort, Blueprint, jsonify, render_template, request
 from src.api.controller import get_all_resorts, get_resort_by_id, get_forecasts_by_resort
+from datetime import date
+
+from src.api.controller import (
+    get_average_temperature,
+    get_resort_by_id
+)
 
 api_bp = Blueprint("api", __name__)
 
@@ -40,3 +46,40 @@ def resort_details(resort_id):
         return jsonify({"error": "Resort not found"}), 404
 
     return jsonify(resort)
+
+@api_bp.route(
+    "/api/resorts/<int:resort_id>/average-temperature",
+    methods=["GET"]
+)
+def average_temperature(resort_id):
+    start = request.args.get("start_date")
+    end = request.args.get("end_date")
+
+    if not start or not end:
+        return jsonify({
+            "error": "start_date and end_date are required"
+        }), 400
+
+    try:
+        start_date = date.fromisoformat(start)
+        end_date = date.fromisoformat(end)
+    except ValueError:
+        return jsonify({
+            "error": "Dates must use YYYY-MM-DD format"
+        }), 400
+
+    if start_date > end_date:
+        return jsonify({
+            "error": "start_date must be before or equal to end_date"
+        }), 400
+
+    if get_resort_by_id(resort_id) is None:
+        return jsonify({"error": "Resort not found"}), 404
+
+    result = get_average_temperature(
+        resort_id,
+        start_date,
+        end_date
+    )
+
+    return jsonify(result), 200

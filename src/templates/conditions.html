@@ -1,24 +1,138 @@
-<h2>Weather Forecast</h2>
 
-{% if forecasts %}
-    <table>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Temperature</th>
-                <th>Conditions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for forecast in forecasts %}
-            <tr>
-                <td>{{ forecast.forecast_date }}</td>
-                <td>{{ forecast.temperature }}°F</td>
-                <td>{{ forecast.description }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p>No forecasts available. Run the weather collector first.</p>
-{% endif %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ resort.name }} - Ski Resort Conditions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main class="container">
+        <h1>{{ resort.name }}</h1>
+        <p>Location: {{ resort.location }}</p>
+
+        <!-- Latest Weather Forecast -->
+        <section class="weather-forecast">
+            <h2>Latest Weather Forecast</h2>
+
+            {% if forecasts %}
+                <p>
+                    Last updated:
+                    {{ forecasts[0].collected_at[:16].replace("T", " ") }} UTC
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Temperature</th>
+                            <th>Conditions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for forecast in forecasts %}
+                        <tr>
+                            <td>{{ forecast.forecast_date }}</td>
+                            <td>
+                                {% if forecast.temperature is not none %}
+                                    {{ forecast.temperature }}°F
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>{{ forecast.description or "N/A" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No forecasts available. Run the weather collector first.</p>
+            {% endif %}
+        </section>
+
+        <!-- Average Temperature Calculator -->
+        <section class="average-calculator">
+            <h2>Average Temperature Calculator</h2>
+
+            <p>
+                Select a date range to calculate the average
+                forecast temperature.
+            </p>
+
+            <form id="average-form">
+                <label for="start-date">Start Date:</label>
+                <input type="date" id="start-date" required>
+
+                <label for="end-date">End Date:</label>
+                <input type="date" id="end-date" required>
+
+                <button type="submit">Calculate Average</button>
+            </form>
+
+            <p id="average-result" role="status" aria-live="polite"></p>
+        </section>
+
+        <p>
+            <a href="{{ url_for('api.home') }}">Back to resorts</a>
+        </p>
+    </main>
+
+    <script>
+        const form = document.getElementById("average-form");
+        const result = document.getElementById("average-result");
+        const resortId = {{ resort.id | tojson }};
+
+        form.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const startDate =
+                document.getElementById("start-date").value;
+
+            const endDate =
+                document.getElementById("end-date").value;
+
+            // Validate date range
+            if (startDate > endDate) {
+                result.textContent =
+                    "End date must be on or after start date.";
+                return;
+            }
+
+            result.textContent = "Calculating...";
+
+            try {
+                const params = new URLSearchParams({
+                    start_date: startDate,
+                    end_date: endDate
+                });
+
+                const response = await fetch(
+                    `/api/resorts/${resortId}/average-temperature?${params}`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    result.textContent =
+                        data.error || "Unable to calculate average.";
+                    return;
+                }
+
+                if (data.average_temperature === null) {
+                    result.textContent =
+                        "No forecasts available for the selected dates.";
+                } else {
+                    result.textContent =
+                        `Average Temperature: ${data.average_temperature}°F ` +
+                        `(${data.forecast_count} forecasts)`;
+                }
+
+            } catch (error) {
+                result.textContent =
+                    "Unable to retrieve the average temperature.";
+            }
+        });
+    </script>
+</body>
+</html>
