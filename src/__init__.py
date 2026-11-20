@@ -3,7 +3,7 @@ import os
 
 from flask import Flask
 from src.services.database import db, migrate
-
+from prometheus_flask_exporter import PrometheusMetrics
 
 def create_app(test_config=None):
     app = Flask(__name__)
@@ -20,6 +20,9 @@ def create_app(test_config=None):
 
     db.init_app(app)
     migrate.init_app(app, db)
+
+    # Enable Prometheus metrics for production monitoring
+    metrics = PrometheusMetrics(app, path="/metrics")
 
     from src.api import model
     from src.api.router import api_bp

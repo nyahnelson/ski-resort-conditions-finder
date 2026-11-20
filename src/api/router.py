@@ -2,6 +2,8 @@
 from flask import abort, Blueprint, jsonify, render_template, request
 from src.api.controller import get_all_resorts, get_resort_by_id, get_forecasts_by_resort
 from datetime import date
+from sqlalchemy import text
+from src.services.database import db
 
 from src.api.controller import (
     get_average_temperature,
@@ -83,3 +85,19 @@ def average_temperature(resort_id):
     )
 
     return jsonify(result), 200
+
+@api_bp.route("/health", methods=["GET"])
+def health():
+    try:
+        db.session.execute(text("SELECT 1"))
+
+        return jsonify({
+            "status": "healthy",
+            "database": "connected"
+        }), 200
+
+    except Exception:
+        return jsonify({
+            "status": "unhealthy",
+            "database": "disconnected"
+        }), 503
