@@ -1,13 +1,13 @@
 
 # Ski Resort Conditions Finder
 
-A Python Flask web application that helps skiers and snowboarders compare weather conditions at ski resorts throughout Idaho.
+A Python Flask web application that helps skiers and snowboarders view weather forecasts at ski resorts throughout Idaho.
 
 ## Project Overview
 
-Skiers often need to visit multiple websites to compare resort conditions. This application simplifies the process by collecting weather forecasts from the National Weather Service (NWS) API and storing them in a SQLite database.
+This application collects weather forecasts from the National Weather Service (NWS) API, stores them in a SQLite database, and displays resort conditions through a web interface.
 
-Currently supported resorts:
+**Supported Resorts:**
 - Bogus Basin
 - Brundage Mountain
 - Tamarack Resort
@@ -16,36 +16,43 @@ Currently supported resorts:
 ## Features
 
 **Implemented:**
-- Flask web application with resort selection
+- Flask web application with resort selection and weather forecasts
 - REST API endpoints for resort information
-- Weather data collection from the NWS API
-- SQLite database for storing resorts and weather forecasts
-- Database schema migrations using Flask-Migrate
+- Average-temperature calculator with date range selection
+- Weather collection from the NWS API
+- SQLite database with Flask-Migrate migrations
+- Unit and integration tests using pytest
+- Mock objects and spies for external API testing
+- Continuous integration using GitHub Actions
+- Cloud deployment using Render
+- Production health checks and Prometheus metrics
 
 **Planned:**
+- RabbitMQ event messaging
+- Automated daily weather collection
 - Resort comparisons and rankings
-- Snowfall analysis
 - Historical weather visualization
-- Automated data collection
-- CI/CD and cloud deployment
 
 ## Technology Stack
 
 | Component | Technology |
 |---|---|
-| Language | Python |
+| Language | Python 3.11 |
 | Backend | Flask |
-| Frontend | HTML, CSS |
+| Frontend | HTML, CSS, JavaScript |
 | Weather API | National Weather Service |
 | Database | SQLite, Flask-SQLAlchemy |
 | Migrations | Flask-Migrate, Alembic |
-| Testing | pytest (planned) |
-| Deployment | Render (planned) |
+| Testing | pytest, unittest.mock |
+| CI/CD | GitHub Actions, Render |
+| Monitoring | Prometheus Flask Exporter |
 
 ## Project Structure
 
 ```text
 ski-resort-conditions-finder/
+├── .github/workflows/
+│   └── tests.yml
 ├── src/
 │   ├── app.py
 │   ├── api/
@@ -58,6 +65,7 @@ ski-resort-conditions-finder/
 │   │   └── database.py
 │   ├── templates/
 │   └── static/
+├── tests/
 ├── migrations/
 ├── run_collector.py
 ├── requirements.txt
@@ -66,98 +74,100 @@ ski-resort-conditions-finder/
 
 ## Getting Started
 
-### Installation
-
-Clone the repository:
+Clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/nyahnelson/ski-resort-conditions-finder.git
 cd ski-resort-conditions-finder
-```
-
-Create a virtual environment and install dependencies:
-
-```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Database Setup
-
-Apply database migrations to create the SQLite tables:
+Initialize the database:
 
 ```bash
 flask --app src.app db upgrade
 ```
 
-The database is stored at `instance/ski_conditions.db`.
-
-### Collect Weather Data
-
-Run the data collector:
+Collect weather forecasts:
 
 ```bash
 python run_collector.py
 ```
 
-The collector retrieves approximately seven days of daytime and nighttime forecasts for each resort, typically saving 56 records per run.
-
-Each record contains a forecast date, temperature, weather description, and collection timestamp. Snowfall amounts are currently unavailable from the selected NWS forecast endpoint.
-
-### View Saved Data
-
-Open the SQLite database:
-
-```bash
-sqlite3 instance/ski_conditions.db
-```
-
-Run:
-
-```sql
-SELECT * FROM weather_forecasts LIMIT 10;
-```
-
-Exit using `.quit`.
-
-### Run the Web Application
+Start the application:
 
 ```bash
 flask --app src.app run --debug
 ```
 
-Open http://127.0.0.1:5000/ in your browser.
+Visit http://127.0.0.1:5000/
 
-## Database and Persistence
+## REST API
 
-The application uses two tables:
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/resorts` | List all resorts |
+| GET | `/api/resorts/<id>` | Get resort details |
+| GET | `/api/resorts/<id>/average-temperature` | Calculate average temperature |
+| GET | `/health` | Check database connectivity |
+| GET | `/metrics` | View Prometheus metrics |
 
-- `resorts`: Stores resort names and locations.
-- `weather_forecasts`: Stores weather forecasts linked to resorts by `resort_id`.
+The average-temperature endpoint requires `start_date` and `end_date` query parameters in `YYYY-MM-DD` format.
 
-Flask-SQLAlchemy manages database operations, while Flask-Migrate and Alembic track schema changes in the `migrations/` directory.
+## Testing
 
-To generate and apply a new schema migration:
+The application uses pytest for unit, integration, API, collector, and monitoring tests. Temporary databases and mocked NWS responses keep tests independent of production data and external services.
+
+Run all tests:
 
 ```bash
-flask --app src.app db migrate -m "Describe change"
-flask --app src.app db upgrade
+python -m pytest tests/ -v
 ```
+
+GitHub Actions automatically runs the test suite on pushes and pull requests to `main`.
+
+## Deployment and Monitoring
+
+The application is deployed on Render using Gunicorn.
+
+```bash
+gunicorn src.app:app
+```
+
+Monitoring includes:
+- `/health` for database connectivity checks
+- `/metrics` for HTTP request counts, response times, and statuses
+- Render application logs
+
+For local metrics testing with Flask debug mode:
+
+```bash
+DEBUG_METRICS=1 flask --app src.app run --debug
+```
+
+Continuous delivery is being configured so Render deploys changes after GitHub Actions tests pass.
 
 ## Development Roadmap
 
-- [x] Set up Flask application and GitHub repository
-- [x] Implement resort selection and API endpoints
-- [x] Integrate external weather API
-- [x] Store weather forecasts in SQLite
-- [x] Implement database migrations
-- [ ] Implement resort comparisons and rankings
-- [ ] Add automated testing and CI/CD
-- [ ] Deploy the application
+**Level C — Complete**
+- [x] Web application, data collection, and analysis
+- [x] Database persistence and REST API
+- [x] Unit testing and cloud deployment
+
+**Level B — Implemented**
+- [x] Integration tests
+- [x] Mock objects and spies
+- [x] Continuous integration
+- [x] Production monitoring
+
+**Level A — In Progress**
+- [ ] RabbitMQ event collaboration
+- [ ] Verify continuous delivery after successful CI
 
 ## Project Status
 
-**In Development — Data Collection and Persistence Implemented**
+**Level B Implemented — Working Toward Level A**
 
-The application successfully retrieves weather forecasts from the National Weather Service API and saves them to SQLite. Future development will focus on analyzing conditions and comparing resorts.
+The application is deployed on Render with automated testing, REST APIs, weather analysis, and production monitoring. Remaining work focuses on RabbitMQ messaging and verifying continuous delivery.
